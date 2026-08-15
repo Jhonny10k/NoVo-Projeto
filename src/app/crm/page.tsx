@@ -92,7 +92,7 @@ export default async function CrmPage({ searchParams }: Props) {
           {canManagePipeline ? (
             <details className="card p-5">
               <summary className="flex items-center justify-between gap-3 font-extrabold">
-                <span>Configurar funil</span><span className="text-slate-400" aria-hidden="true">⚙</span>
+                <span>Configurar etapas do funil</span><span className="text-slate-400" aria-hidden="true">⚙</span>
               </summary>
               <p className="muted mt-2 text-sm">Renomeie e reordene etapas sem alterar as chaves internas dos fluxos.</p>
               <div className="mt-4 grid gap-3">

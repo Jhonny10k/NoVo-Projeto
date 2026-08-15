@@ -82,7 +82,7 @@ export default async function AtendimentoPage({ searchParams }: Props) {
               {channel || direction ? <Link href="/atendimento" className="btn-ghost w-full">Limpar filtros</Link> : null}
             </form>
             <div className="soft-panel mt-3 p-4 text-xs leading-5 text-slate-500">
-              <strong className="text-slate-700">Sobre os status:</strong> “Aceita pelo canal” não significa entregue. Entrega e leitura só aparecem quando o provider confirma por Webhook.
+              <strong className="text-slate-700">Sobre os status:</strong> “Sent” significa aceito pelo provider; entrega/leitura só aparecem quando confirmadas por Webhook.
             </div>
           </aside>
 

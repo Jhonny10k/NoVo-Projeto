@@ -1,0 +1,71 @@
+name: Production Smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      BASE_URL: https://no-vo-projeto.vercel.app
+      SUPABASE_URL: https://kqrawaxfaahccrakqhrg.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_sJAPKzbPXvjKwSF2EPadsQ_-50Qt-WV
+    steps:
+      - name: Validate production runtime and Supabase connection
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ready=0
+          for attempt in $(seq 1 48); do
+            status=$(curl -sS -o /tmp/planos.html -w "%{http_code}" "${BASE_URL}/planos?smoke=${GITHUB_SHA}&attempt=${attempt}" || true)
+            if [ "$status" = "200" ] \
+              && ! grep -q "Planos ainda não carregados" /tmp/planos.html \
+              && grep -q "Essencial" /tmp/planos.html \
+              && grep -q "Profissional" /tmp/planos.html \
+              && grep -q ">IA<" /tmp/planos.html; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$ready" != "1" ]; then
+            echo "Production did not load the three Supabase plans."
+            cat /tmp/planos.html || true
+            exit 1
+          fi
+
+          for path in / /login /cadastro /planos /api/v1/openapi.json /robots.txt; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "${BASE_URL}${path}")
+            if [ "$code" != "200" ]; then
+              echo "Unexpected HTTP ${code} for ${path}"
+              exit 1
+            fi
+          done
+
+          curl -sSI "${BASE_URL}/login" > /tmp/headers.txt
+          grep -qi '^x-frame-options: DENY' /tmp/headers.txt
+          grep -qi '^x-content-type-options: nosniff' /tmp/headers.txt
+          grep -qi '^strict-transport-security:' /tmp/headers.txt
+
+          curl -fsS \
+            "${SUPABASE_URL}/rest/v1/plans?select=id,name,active&active=eq.true&order=sort_order" \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            > /tmp/plans.json
+
+          grep -q '"name":"Essencial"' /tmp/plans.json
+          grep -q '"name":"Profissional"' /tmp/plans.json
+          grep -q '"name":"IA"' /tmp/plans.json
+
+          echo "Production smoke passed: Vercel runtime, Supabase plans, public routes and security headers are healthy."

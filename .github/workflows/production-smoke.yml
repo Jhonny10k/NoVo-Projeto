@@ -21,7 +21,7 @@ jobs:
       SUPABASE_URL: https://kqrawaxfaahccrakqhrg.supabase.co
       SUPABASE_PUBLISHABLE_KEY: sb_publishable_sJAPKzbPXvjKwSF2EPadsQ_-50Qt-WV
     steps:
-      - name: Validate production runtime and Supabase connection
+      - name: Validate production runtime, Supabase and Auth
         shell: bash
         run: |
           set -euo pipefail
@@ -68,4 +68,54 @@ jobs:
           grep -q '"name":"Profissional"' /tmp/plans.json
           grep -q '"name":"IA"' /tmp/plans.json
 
-          echo "Production smoke passed: Vercel runtime, Supabase plans, public routes and security headers are healthy."
+          auth_status=$(curl -sS -o /tmp/auth-invalid.json -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/auth/v1/token?grant_type=password" \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Content-Type: application/json" \
+            --data-binary "{\"email\":\"e2e-direct-${GITHUB_RUN_ID}@example.com\",\"password\":\"E2E-Invalid-Password-123!\"}")
+
+          if [ "$auth_status" != "400" ]; then
+            echo "Expected Supabase Auth invalid credentials response, got HTTP ${auth_status}."
+            cat /tmp/auth-invalid.json
+            exit 1
+          fi
+          grep -Eqi 'invalid_credentials|invalid login credentials' /tmp/auth-invalid.json
+
+          curl -fsS -c /tmp/login.cookies "${BASE_URL}/login?smoke=${GITHUB_SHA}" -o /tmp/login.html
+          action_field=$(grep -o '\$ACTION_ID_[a-f0-9]\+' /tmp/login.html | head -n 1)
+          if [ -z "$action_field" ]; then
+            echo "Could not discover the Next.js server action field on /login."
+            exit 1
+          fi
+
+          login_final_url=$(curl -sS -L \
+            -b /tmp/login.cookies -c /tmp/login.cookies \
+            -H "Origin: ${BASE_URL}" \
+            -H "Referer: ${BASE_URL}/login" \
+            -o /tmp/login-result.html \
+            -w "%{url_effective}" \
+            -F "${action_field}=" \
+            -F "email=e2e-app-${GITHUB_RUN_ID}@example.com" \
+            -F "password=E2E-Invalid-Password-123!" \
+            "${BASE_URL}/login")
+
+          case "$login_final_url" in
+            *"/login?erro=credenciais"*) ;;
+            *)
+              echo "App login did not reach the expected credentials error. Final URL: ${login_final_url}"
+              cat /tmp/login-result.html || true
+              exit 1
+              ;;
+          esac
+          grep -q "Não foi possível entrar com essas credenciais" /tmp/login-result.html
+
+          dashboard_final_url=$(curl -sS -L -o /tmp/dashboard-result.html -w "%{url_effective}" "${BASE_URL}/dashboard")
+          case "$dashboard_final_url" in
+            *"/login"*) ;;
+            *)
+              echo "Unauthenticated /dashboard did not redirect to login: ${dashboard_final_url}"
+              exit 1
+              ;;
+          esac
+
+          echo "Production smoke passed: Vercel runtime, Supabase Data API, Auth/GoTrue, admin rate limit path, protected routing and security headers are healthy."

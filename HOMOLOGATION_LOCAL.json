@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-08-15T18:08:27.896Z",
+  "overall": "partial",
+  "steps": [
+    {
+      "name": "verify:migrations",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 43
+    },
+    {
+      "name": "test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 667
+    },
+    {
+      "name": "e2e:tenant",
+      "status": "blocked",
+      "reason": "credenciais E2E de dois tenants não configuradas"
+    },
+    {
+      "name": "e2e:units",
+      "status": "blocked",
+      "reason": "credenciais/IDs E2E multiunidade não configurados"
+    },
+    {
+      "name": "lint",
+      "status": "blocked",
+      "reason": "node_modules ausente"
+    },
+    {
+      "name": "typecheck",
+      "status": "blocked",
+      "reason": "node_modules ausente"
+    },
+    {
+      "name": "build",
+      "status": "blocked",
+      "reason": "node_modules ausente"
+    }
+  ],
+  "externalConfig": {
+    "supabase": false,
+    "mercadoPago": false,
+    "resend": false,
+    "metaWhatsApp": false,
+    "googleCalendar": false,
+    "googleMaps": false,
+    "openai": false,
+    "vercel": false
+  }
+}

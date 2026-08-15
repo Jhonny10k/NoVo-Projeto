@@ -1,0 +1,82 @@
+{
+  "generated_at": "2026-08-15",
+  "project": {
+    "name": "OrçaZap",
+    "project_ref": "kqrawaxfaahccrakqhrg",
+    "region": "sa-east-1",
+    "url": "https://kqrawaxfaahccrakqhrg.supabase.co",
+    "status": "ACTIVE_HEALTHY",
+    "postgres_engine": "17",
+    "database_version": "17.6.1.155",
+    "created_at": "2026-08-15T15:03:58.763672Z"
+  },
+  "canonical_migrations": {
+    "count": 36,
+    "first": "202608150001_initial_core.sql",
+    "last": "202608150036_unit_visibility_hardening.sql",
+    "verified_sequence": true,
+    "drop_table_found": false
+  },
+  "local_tests": {
+    "passed": 144,
+    "failed": 0
+  },
+  "database": {
+    "public_tables": 51,
+    "rls_enabled": 51,
+    "rls_missing": 0,
+    "security_advisor_reviewed": true,
+    "performance_advisor_reviewed": true,
+    "unexpected_anon_security_definer_execute": 0
+  },
+  "smoke": {
+    "anon_select_plans": true,
+    "anon_select_organizations": false,
+    "authenticated_direct_select_external_outbox": false,
+    "anon_execute_get_public_site": true,
+    "anon_execute_service_outbox_worker": false,
+    "authenticated_without_membership_visible_organizations": 0,
+    "temporal_worker_manual_ok": true
+  },
+  "transactional_rls_e2e": {
+    "status": "pass",
+    "checks_passed": 16,
+    "checks_failed": 0,
+    "covers": [
+      "two tenant organization isolation",
+      "admin sees all units in own tenant",
+      "restricted member sees only assigned unit",
+      "restricted member cannot read blocked-unit leads",
+      "restricted member cannot insert into blocked unit",
+      "second tenant cannot read first tenant data",
+      "list_enterprise_units respects unit scope"
+    ],
+    "cleanup": {
+      "auth_users": 0,
+      "organizations": 0,
+      "memberships": 0,
+      "temporary_plans": 0
+    },
+    "auth_api_login_exercised": false
+  },
+  "cron": {
+    "job_name": "platform-temporal-automations",
+    "schedule": "*/5 * * * *",
+    "active": true
+  },
+  "runtime_migration_defects_fixed": [
+    "appointments buffer reference",
+    "analytics reserved alias day -> day_value",
+    "enterprise unit RLS policy syntax"
+  ],
+  "authorization_contract_defects_fixed": [
+    "organization_units/list_enterprise_units exposed unassigned units to restricted members -> migration 0036"
+  ],
+  "blocked": [
+    "two-user Supabase Auth login E2E",
+    "multi-unit E2E through real Auth JWT/PostgREST",
+    "npm install / lint / typecheck / build",
+    "Vercel preview/production deployment",
+    "external provider credential validation"
+  ]
+}

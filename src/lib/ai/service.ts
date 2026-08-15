@@ -1,7 +1,6 @@
 import "server-only";
 import {createAdminClient} from "@/lib/supabase/admin";
 import {getAIProvider,isAIConfigured} from "@/lib/ai";
-import type {AIGenerateInput} from "@/lib/ai/provider";
 import {consumeRateLimit,requestFingerprint} from "@/lib/security/rate-limit";
 import {createClient} from "@/lib/supabase/server";
 

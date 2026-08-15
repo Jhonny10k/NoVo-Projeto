@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 
-const widths = { desktop: "100%", tablet: "768px", mobile: "390px" } as const;
-type Device = keyof typeof widths;
+type Device = "desktop" | "tablet" | "mobile";
 
 export function DevicePreview() {
   const [device, setDevice] = useState<Device>("desktop");

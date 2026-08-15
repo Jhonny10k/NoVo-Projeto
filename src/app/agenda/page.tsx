@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { requireCurrentOrganization } from "@/lib/organizations/current";
 import { requireFeature } from "@/lib/plans/entitlements";
 import { createClient } from "@/lib/supabase/server";
+import { isoTimeAgo } from "@/lib/time";
 
 export const dynamic="force-dynamic";
 type Props={searchParams:Promise<Record<string,string|string[]|undefined>>};
@@ -20,7 +21,7 @@ export default async function AgendaPage({searchParams}:Props){
     supabase.from("services").select("id,name,duration_minutes").eq("organization_id",organization.id).eq("active",true).order("name"),
     supabase.from("leads").select("id,name").eq("organization_id",organization.id).not("status","in","(won,lost)").order("created_at",{ascending:false}).limit(100),
     supabase.from("customers").select("id,name").eq("organization_id",organization.id).order("created_at",{ascending:false}).limit(100),
-    supabase.from("appointments").select("id,starts_at,ends_at,status,source,professional_user_id,contact_name,services(name),leads(name),customers(name)").eq("organization_id",organization.id).gte("ends_at",new Date(Date.now()-86400000).toISOString()).order("starts_at").limit(200),
+    supabase.from("appointments").select("id,starts_at,ends_at,status,source,professional_user_id,contact_name,services(name),leads(name),customers(name)").eq("organization_id",organization.id).gte("ends_at",isoTimeAgo(86400000)).order("starts_at").limit(200),
     supabase.rpc("organization_member_directory",{p_organization_id:organization.id}),
     supabase.from("organizations").select("timezone").eq("id",organization.id).single()
   ]);

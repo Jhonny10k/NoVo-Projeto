@@ -22,12 +22,13 @@ async function billingContext() {
   const user = await requireUser();
   const organization = await requireCurrentOrganization();
   if (!["owner", "admin"].includes(organization.role)) redirect("/assinatura?erro=permissao");
-  if (!user.email) redirect("/assinatura?erro=email");
-  return { user, organization };
+  const payerEmail = user.email;
+  if (!payerEmail) redirect("/assinatura?erro=email");
+  return { user, organization, payerEmail };
 }
 
 export async function startSubscriptionCheckoutAction(formData: FormData) {
-  const { user, organization } = await billingContext();
+  const { user, organization, payerEmail } = await billingContext();
   const planId = text(formData, "plan_id", 80);
   const billingCycle = text(formData, "billing_cycle", 20);
   const couponCode = text(formData, "coupon_code", 40).toUpperCase();
@@ -94,7 +95,7 @@ export async function startSubscriptionCheckoutAction(formData: FormData) {
     plan_id: plan.id,
     billing_cycle: billingCycle,
     provider: "mercadopago",
-    payer_email: user.email,
+    payer_email: payerEmail,
     amount_cents: amountCents,
     list_amount_cents: listAmountCents,
     discount_cents: discountCents,
@@ -108,7 +109,7 @@ export async function startSubscriptionCheckoutAction(formData: FormData) {
   try {
     const result = await createMercadoPagoSubscription({
       sessionId,
-      payerEmail: user.email,
+      payerEmail,
       reason: `${plan.name} — ${organization.name}`,
       amountCents,
       billingCycle: billingCycle as "monthly" | "annual",
